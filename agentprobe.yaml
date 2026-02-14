@@ -1,0 +1,43 @@
+# AgentProbe — Example Configuration
+# https://github.com/alexmelges/agentprobe
+
+agent:
+  type: http
+  endpoint: "http://localhost:3000/api/chat"
+  method: POST
+  headers:
+    Authorization: "Bearer ${AGENT_API_KEY}"
+  request:
+    template: '{"message": "{{input}}"}'
+  response:
+    path: "choices[0].message.content"
+
+# Or use OpenAI directly:
+# agent:
+#   type: openai
+#   model: gpt-4o-mini
+#   system: "You are a helpful assistant."
+#   api_key: "${OPENAI_API_KEY}"
+
+# Or Anthropic:
+# agent:
+#   type: anthropic
+#   model: claude-sonnet-4-5-20250929
+#   system: "You are a helpful assistant."
+#   api_key: "${ANTHROPIC_API_KEY}"
+
+suites:
+  - prompt-injection
+  - data-exfiltration
+  - permission-escalation
+  - output-manipulation
+
+# Optional: define boundaries for more accurate detection
+boundaries:
+  system_prompt_secret: true
+  tools:
+    - search
+    - get_weather
+  sensitive_topics:
+    - medical advice
+    - legal advice
