@@ -78,7 +78,7 @@ describe("reporter", () => {
   it("formats json output", () => {
     const output = report(mockResult, "json");
     const parsed = JSON.parse(output);
-    expect(parsed.version).toBe("0.1.0");
+    expect(parsed.version).toBe("0.2.0");
     expect(parsed.summary.total).toBe(3);
     expect(parsed.summary.failed).toBe(2);
     expect(parsed.summary.critical).toBe(1);
@@ -123,7 +123,7 @@ describe("reporter", () => {
 
     const run = sarif.runs[0];
     expect(run.tool.driver.name).toBe("agentprobe");
-    expect(run.tool.driver.version).toBe("0.1.0");
+    expect(run.tool.driver.version).toBe("0.2.0");
     expect(run.tool.driver.rules).toHaveLength(3); // all 3 attack patterns as rules
   });
 

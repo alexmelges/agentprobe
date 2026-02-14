@@ -15,7 +15,7 @@ inputs:
     required: false
     default: "low"
   format:
-    description: "Output format (text, json, markdown)"
+    description: "Output format (text, json, markdown, sarif)"
     required: false
     default: "text"
   timeout:

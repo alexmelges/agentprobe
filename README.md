@@ -125,7 +125,7 @@ Options:
   -c, --config <path>    Config file path (default: "agentprobe.yaml")
   -a, --attacks <suites>  Comma-separated attack suites to run
   -s, --severity <level>  Min severity: low, medium, high, critical (default: "low")
-  -f, --format <format>   Output: text, json, markdown (default: "text")
+  -f, --format <format>   Output: text, json, markdown, sarif (default: "text")
   -t, --timeout <ms>      Per-attack timeout in ms (default: "30000")
   --dry-run               List attacks without running
   --verbose               Show full request/response details
@@ -145,6 +145,9 @@ agentprobe --severity high
 # JSON output for CI parsing
 agentprobe --format json
 
+# SARIF output for GitHub Security tab
+agentprobe --format sarif > results.sarif
+
 # Markdown for PR comments
 agentprobe --format markdown
 
@@ -159,7 +162,7 @@ agentprobe --verbose
 
 ### Text (default)
 ```
-AgentProbe v0.1.0 — Adversarial Security Testing
+AgentProbe v0.2.0 — Adversarial Security Testing
 
 Target: openai
 Attacks: 4 suites, 104 patterns
@@ -180,7 +183,7 @@ Exit code: 1 (6 critical/high findings)
 ### JSON
 ```json
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "target": "openai",
   "summary": {
     "total": 104,
@@ -198,6 +201,9 @@ Exit code: 1 (6 critical/high findings)
 ### Markdown
 Generates a table-based report suitable for GitHub PR comments.
 
+### SARIF
+Produces [SARIF 2.1.0](https://sarifweb.azurewebsites.net/) output for integration with GitHub's **Security tab** (Code Scanning Alerts). Each vulnerability becomes a security alert with severity, description, and matched detectors. Upload with `github/codeql-action/upload-sarif`.
+
 ## GitHub Actions
 
 ### Using the Action
@@ -211,7 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexmelges/agentprobe@v0.1.0
+      - uses: alexmelges/agentprobe@v0.2.0
         with:
           config: agentprobe.yaml
           severity: high
@@ -227,6 +233,33 @@ jobs:
   env:
     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
+
+### SARIF Upload to GitHub Security Tab
+
+```yaml
+name: Agent Security Scan
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run AgentProbe
+        run: npx agentprobe --format sarif > agentprobe.sarif
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: agentprobe.sarif
+          category: agentprobe
+```
+
+This surfaces agent vulnerabilities directly in your repo's **Security → Code scanning** tab.
 
 ## Detection System
 

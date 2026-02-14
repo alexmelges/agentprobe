@@ -20,7 +20,7 @@ const SEVERITY_ICONS: Record<Severity, string> = {
 function formatText(result: ProbeResult, options: { verbose?: boolean } = {}): string {
   const lines: string[] = [];
 
-  lines.push(chalk.bold(`AgentProbe v0.1.0 — Adversarial Security Testing\n`));
+  lines.push(chalk.bold(`AgentProbe v0.2.0 — Adversarial Security Testing\n`));
   lines.push(`Target: ${result.target}`);
   lines.push(
     `Attacks: ${result.suites.length} suites, ${result.totalAttacks} patterns\n`
@@ -81,7 +81,7 @@ function formatText(result: ProbeResult, options: { verbose?: boolean } = {}): s
 function formatJson(result: ProbeResult): string {
   return JSON.stringify(
     {
-      version: "0.1.0",
+      version: "0.2.0",
       target: result.target,
       duration: result.duration,
       summary: {
@@ -215,7 +215,7 @@ function formatSarif(result: ProbeResult): string {
         tool: {
           driver: {
             name: "agentprobe",
-            version: "0.1.0",
+            version: "0.2.0",
             informationUri: "https://github.com/alexmelges/agentprobe",
             rules,
           },
