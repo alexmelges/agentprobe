@@ -114,6 +114,66 @@ describe("reporter", () => {
     expect(output).toContain("0 attacks");
   });
 
+  it("formats sarif output with valid structure", () => {
+    const output = report(mockResult, "sarif");
+    const sarif = JSON.parse(output);
+    expect(sarif.$schema).toContain("sarif-schema-2.1.0");
+    expect(sarif.version).toBe("2.1.0");
+    expect(sarif.runs).toHaveLength(1);
+
+    const run = sarif.runs[0];
+    expect(run.tool.driver.name).toBe("agentprobe");
+    expect(run.tool.driver.version).toBe("0.1.0");
+    expect(run.tool.driver.rules).toHaveLength(3); // all 3 attack patterns as rules
+  });
+
+  it("sarif results only include vulnerable findings", () => {
+    const output = report(mockResult, "sarif");
+    const sarif = JSON.parse(output);
+    const results = sarif.runs[0].results;
+    expect(results).toHaveLength(2); // only 2 vulnerable
+    expect(results[0].ruleId).toBe("pi-001");
+    expect(results[1].ruleId).toBe("pi-002");
+  });
+
+  it("sarif maps severity to correct levels", () => {
+    const output = report(mockResult, "sarif");
+    const sarif = JSON.parse(output);
+    const results = sarif.runs[0].results;
+    // high → error, critical → error
+    expect(results[0].level).toBe("error"); // high
+    expect(results[1].level).toBe("error"); // critical
+  });
+
+  it("sarif includes matched detectors in message", () => {
+    const output = report(mockResult, "sarif");
+    const sarif = JSON.parse(output);
+    const msg = sarif.runs[0].results[0].message.text;
+    expect(msg).toContain("compliance-check");
+  });
+
+  it("sarif includes invocation metadata", () => {
+    const output = report(mockResult, "sarif");
+    const sarif = JSON.parse(output);
+    const inv = sarif.runs[0].invocations[0];
+    expect(inv.executionSuccessful).toBe(true);
+    expect(inv.properties.totalAttacks).toBe(3);
+  });
+
+  it("sarif handles empty results", () => {
+    const empty: ProbeResult = {
+      suites: [],
+      totalAttacks: 0,
+      totalPassed: 0,
+      totalFailed: 0,
+      duration: 10,
+      target: "mock",
+    };
+    const sarif = JSON.parse(report(empty, "sarif"));
+    expect(sarif.runs[0].results).toHaveLength(0);
+    expect(sarif.runs[0].tool.driver.rules).toHaveLength(0);
+  });
+
   it("json includes error information", () => {
     const withError: ProbeResult = {
       suites: [

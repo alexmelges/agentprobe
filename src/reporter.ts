@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import type { ProbeResult, AttackResult, SuiteResult, Severity } from "./attacks/types.js";
 
-export type OutputFormat = "text" | "json" | "markdown";
+export type OutputFormat = "text" | "json" | "markdown" | "sarif";
 
 const SEVERITY_COLORS: Record<Severity, (s: string) => string> = {
   critical: chalk.red.bold,
@@ -153,6 +153,92 @@ function formatMarkdown(result: ProbeResult): string {
   return lines.join("\n");
 }
 
+const SARIF_LEVEL: Record<Severity, string> = {
+  critical: "error",
+  high: "error",
+  medium: "warning",
+  low: "note",
+};
+
+function formatSarif(result: ProbeResult): string {
+  const allAttacks = result.suites.flatMap((s) => s.results);
+
+  // Build rules from all unique attack patterns
+  const rulesMap = new Map<string, AttackResult["attack"]>();
+  for (const r of allAttacks) {
+    if (!rulesMap.has(r.attack.id)) {
+      rulesMap.set(r.attack.id, r.attack);
+    }
+  }
+
+  const rules = Array.from(rulesMap.values()).map((a) => ({
+    id: a.id,
+    name: a.name,
+    shortDescription: { text: a.description },
+    fullDescription: { text: `[${a.suite}] ${a.description}` },
+    defaultConfiguration: { level: SARIF_LEVEL[a.severity] },
+    properties: {
+      suite: a.suite,
+      severity: a.severity,
+    },
+  }));
+
+  // Build results — only vulnerable findings
+  const results = allAttacks
+    .filter((r) => r.vulnerable)
+    .map((r) => ({
+      ruleId: r.attack.id,
+      level: SARIF_LEVEL[r.attack.severity],
+      message: {
+        text: `${r.attack.description}. Matched detectors: ${r.matchedDetectors.join(", ")}`,
+      },
+      locations: [
+        {
+          physicalLocation: {
+            artifactLocation: { uri: result.target },
+          },
+        },
+      ],
+      properties: {
+        suite: r.attack.suite,
+        duration: r.duration,
+        detectors: r.matchedDetectors,
+      },
+    }));
+
+  const sarif = {
+    $schema:
+      "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
+    version: "2.1.0" as const,
+    runs: [
+      {
+        tool: {
+          driver: {
+            name: "agentprobe",
+            version: "0.1.0",
+            informationUri: "https://github.com/alexmelges/agentprobe",
+            rules,
+          },
+        },
+        results,
+        invocations: [
+          {
+            executionSuccessful: true,
+            properties: {
+              totalAttacks: result.totalAttacks,
+              totalPassed: result.totalPassed,
+              totalFailed: result.totalFailed,
+              duration: result.duration,
+            },
+          },
+        ],
+      },
+    ],
+  };
+
+  return JSON.stringify(sarif, null, 2);
+}
+
 function countBySeverity(result: ProbeResult, severity: Severity): number {
   return result.suites
     .flatMap((s) => s.results)
@@ -169,6 +255,8 @@ export function report(
       return formatJson(result);
     case "markdown":
       return formatMarkdown(result);
+    case "sarif":
+      return formatSarif(result);
     case "text":
     default:
       return formatText(result, options);

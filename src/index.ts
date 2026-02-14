@@ -23,7 +23,7 @@ program
   )
   .option(
     "-f, --format <format>",
-    "output format: text, json, markdown",
+    "output format: text, json, markdown, sarif",
     "text"
   )
   .option("-t, --timeout <ms>", "per-attack timeout in ms", "30000")
