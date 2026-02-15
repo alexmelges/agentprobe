@@ -16,6 +16,17 @@ AgentProbe throws **134 adversarial attacks** at your AI agent to find security 
 ## Quick Start
 
 ```bash
+# Try it instantly — no API keys needed
+npx agentprobe --demo
+
+# Or test your own agent
+npx agentprobe init    # generates agentprobe.yaml
+npx agentprobe         # runs the scan
+```
+
+### Full Setup
+
+```bash
 # Install
 npm install -g agentprobe
 
