@@ -17,18 +17,18 @@ AgentProbe throws **134 adversarial attacks** at your AI agent to find security 
 
 ```bash
 # Try it instantly — no API keys needed
-npx agentprobe --demo
+npx @alexmelges/agentprobe --demo
 
 # Or test your own agent
-npx agentprobe init    # generates agentprobe.yaml
-npx agentprobe         # runs the scan
+npx @alexmelges/agentprobe init    # generates agentprobe.yaml
+npx @alexmelges/agentprobe         # runs the scan
 ```
 
 ### Full Setup
 
 ```bash
 # Install
-npm install -g agentprobe
+npm install -g @alexmelges/agentprobe
 
 # Create config
 cat > agentprobe.yaml << 'EOF'
@@ -240,7 +240,7 @@ jobs:
 
 ```yaml
 - name: Run AgentProbe
-  run: npx agentprobe --severity high --format json
+  run: npx @alexmelges/agentprobe --severity high --format json
   env:
     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
@@ -259,7 +259,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run AgentProbe
-        run: npx agentprobe --format sarif > agentprobe.sarif
+        run: npx @alexmelges/agentprobe --format sarif > agentprobe.sarif
         continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -1,5 +1,5 @@
 {
-  "name": "agentprobe",
+  "name": "@alexmelges/agentprobe",
   "version": "0.3.0",
   "description": "Adversarial security testing for AI agents — OWASP ZAP for AI agents",
   "type": "module",
