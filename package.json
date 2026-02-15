@@ -1,10 +1,10 @@
 {
   "name": "@alexmelges/agentprobe",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Adversarial security testing for AI agents — OWASP ZAP for AI agents",
   "type": "module",
   "bin": {
-    "agentprobe": "./dist/index.js"
+    "agentprobe": "dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
