@@ -3,12 +3,14 @@ import { promptInjectionAttacks } from "./prompt-injection.js";
 import { dataExfiltrationAttacks } from "./data-exfiltration.js";
 import { permissionEscalationAttacks } from "./permission-escalation.js";
 import { outputManipulationAttacks } from "./output-manipulation.js";
+import { multiAgentAttacks } from "./multi-agent.js";
 
 const registry: Record<SuiteName, AttackPattern[]> = {
   "prompt-injection": promptInjectionAttacks,
   "data-exfiltration": dataExfiltrationAttacks,
   "permission-escalation": permissionEscalationAttacks,
   "output-manipulation": outputManipulationAttacks,
+  "multi-agent": multiAgentAttacks,
   jailbreak: [], // future
 };
 

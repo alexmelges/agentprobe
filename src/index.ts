@@ -13,7 +13,7 @@ const program = new Command();
 program
   .name("agentprobe")
   .description("Adversarial security testing for AI agents")
-  .version("0.2.0")
+  .version("0.3.0")
   .option("-c, --config <path>", "config file path", "agentprobe.yaml")
   .option("-a, --attacks <suites>", "comma-separated attack suites to run")
   .option(

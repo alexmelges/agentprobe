@@ -3,6 +3,7 @@ export type SuiteName =
   | "data-exfiltration"
   | "permission-escalation"
   | "output-manipulation"
+  | "multi-agent"
   | "jailbreak";
 
 export type Severity = "critical" | "high" | "medium" | "low";
@@ -12,6 +13,7 @@ export const ALL_SUITES: SuiteName[] = [
   "data-exfiltration",
   "permission-escalation",
   "output-manipulation",
+  "multi-agent",
 ];
 
 export const SEVERITY_ORDER: Record<Severity, number> = {

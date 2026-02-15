@@ -28,6 +28,7 @@ export interface ProbeConfig {
   agent: AgentConfig;
   suites: SuiteName[];
   boundaries?: BoundariesConfig;
+  downstream_agent?: AgentConfig;
 }
 
 function substituteEnvVars(value: string): string {
@@ -59,6 +60,7 @@ const VALID_SUITES: SuiteName[] = [
   "data-exfiltration",
   "permission-escalation",
   "output-manipulation",
+  "multi-agent",
   "jailbreak",
 ];
 
@@ -126,6 +128,27 @@ export function validateConfig(raw: unknown): ProbeConfig {
       system_prompt_secret: b.system_prompt_secret as boolean | undefined,
       tools: b.tools as string[] | undefined,
       sensitive_topics: b.sensitive_topics as string[] | undefined,
+    };
+  }
+
+  // Optional downstream agent for multi-agent testing
+  if (config.downstream_agent && typeof config.downstream_agent === "object") {
+    const da = config.downstream_agent as Record<string, unknown>;
+    if (!da.type || typeof da.type !== "string" || !VALID_TYPES.includes(da.type)) {
+      throw new Error(
+        `Invalid downstream_agent.type. Must be one of: ${VALID_TYPES.join(", ")}`
+      );
+    }
+    result.downstream_agent = {
+      type: da.type as AgentConfig["type"],
+      endpoint: da.endpoint as string | undefined,
+      method: (da.method as string) ?? "POST",
+      headers: da.headers as Record<string, string> | undefined,
+      request: da.request as { template: string } | undefined,
+      response: da.response as { path: string } | undefined,
+      model: da.model as string | undefined,
+      system: da.system as string | undefined,
+      api_key: da.api_key as string | undefined,
     };
   }
 

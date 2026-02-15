@@ -1,6 +1,6 @@
 {
   "name": "agentprobe",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Adversarial security testing for AI agents — OWASP ZAP for AI agents",
   "type": "module",
   "bin": {

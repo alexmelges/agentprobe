@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-AgentProbe throws **104 adversarial attacks** at your AI agent to find security vulnerabilities before production. Prompt injection, data exfiltration, permission escalation, and output manipulation — tested automatically in CI.
+AgentProbe throws **134 adversarial attacks** at your AI agent to find security vulnerabilities before production. Prompt injection, data exfiltration, permission escalation, output manipulation, and **multi-agent attacks** — tested automatically in CI.
 
 ## Why?
 
@@ -217,7 +217,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexmelges/agentprobe@v0.2.0
+      - uses: alexmelges/agentprobe@v0.3.0
         with:
           config: agentprobe.yaml
           severity: high
@@ -261,6 +261,57 @@ jobs:
 
 This surfaces agent vulnerabilities directly in your repo's **Security → Code scanning** tab.
 
+## Multi-Agent Attack Suite (v0.3.0)
+
+Test your multi-agent systems for inter-agent security vulnerabilities. When agents communicate, share context, or delegate tasks, new attack surfaces emerge.
+
+### Attack Categories
+
+| Category | Attacks | Description |
+|----------|---------|-------------|
+| **Context Poisoning** | 6 | Injecting malicious instructions via shared context, tool outputs, or message relaying |
+| **Task/Artifact Manipulation** | 6 | Injecting malicious tasks, replacing configs, poisoning shared knowledge bases |
+| **Fake Checkpoints** | 6 | Fabricating test results, code reviews, security scans to fool orchestrators |
+| **Cascade Escalation** | 5 | Using low-privilege agents to escalate through high-privilege agents |
+| **Authority Spoofing** | 7 | Impersonating orchestrators, admins, human operators, or emergency protocols |
+
+### Example Config
+
+```yaml
+agent:
+  type: openai
+  model: gpt-4o
+  system: "You are Agent A in a multi-agent pipeline."
+  api_key: "${OPENAI_API_KEY}"
+
+# Optional: downstream agent for full multi-agent testing
+downstream_agent:
+  type: openai
+  model: gpt-4o-mini
+  system: "You are Agent B. You receive output from Agent A."
+  api_key: "${OPENAI_API_KEY}"
+
+suites:
+  - multi-agent
+  - prompt-injection
+```
+
+```bash
+# Run multi-agent tests
+agentprobe --attacks multi-agent
+
+# Run all suites including multi-agent
+agentprobe --attacks prompt-injection,data-exfiltration,multi-agent
+```
+
+### New Detectors
+
+| Detector | What it catches |
+|----------|----------------|
+| `context-poisoning` | Downstream agent echoing/following injected upstream instructions |
+| `fake-checkpoint` | Fabricated quality gate results (fake test passes, fake approvals) |
+| `authority-spoof` | Responses accepting authority from spoofed orchestrator/admin sources |
+
 ## Detection System
 
 AgentProbe uses **rule-based detectors** — no LLM calls needed for detection, making results deterministic and cost-free:
@@ -278,6 +329,9 @@ AgentProbe uses **rule-based detectors** — no LLM calls needed for detection, 
 | `harmful-content` | Dangerous medical/security/phishing content |
 | `format-injection` | HTML/script/iframe injection in output |
 | `link-injection` | Suspicious or malicious link insertion |
+| `context-poisoning` | Inter-agent context/instruction poisoning |
+| `fake-checkpoint` | Fabricated quality gates and verification results |
+| `authority-spoof` | Spoofed orchestrator/admin/emergency authority claims |
 
 ## Severity Levels
 
