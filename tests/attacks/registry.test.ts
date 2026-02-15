@@ -26,6 +26,12 @@ describe("attack registry", () => {
     expect(attacks[0].suite).toBe("output-manipulation");
   });
 
+  it("returns github-actions attacks", () => {
+    const attacks = getAttacks("github-actions");
+    expect(attacks.length).toBeGreaterThanOrEqual(25);
+    expect(attacks[0].suite).toBe("github-actions");
+  });
+
   it("returns empty for jailbreak (future)", () => {
     const attacks = getAttacks("jailbreak");
     expect(attacks).toEqual([]);
@@ -37,8 +43,10 @@ describe("attack registry", () => {
       "data-exfiltration",
       "permission-escalation",
       "output-manipulation",
+      "multi-agent",
+      "github-actions",
     ]);
-    expect(all.length).toBeGreaterThanOrEqual(90);
+    expect(all.length).toBeGreaterThanOrEqual(150);
   });
 
   it("each attack has required fields", () => {
@@ -47,6 +55,8 @@ describe("attack registry", () => {
       "data-exfiltration",
       "permission-escalation",
       "output-manipulation",
+      "multi-agent",
+      "github-actions",
     ]);
     for (const a of all) {
       expect(a.id).toBeTruthy();
@@ -64,6 +74,8 @@ describe("attack registry", () => {
       "data-exfiltration",
       "permission-escalation",
       "output-manipulation",
+      "multi-agent",
+      "github-actions",
     ]);
     const ids = all.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);

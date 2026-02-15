@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-AgentProbe throws **134 adversarial attacks** at your AI agent to find security vulnerabilities before production. Prompt injection, data exfiltration, permission escalation, output manipulation, and **multi-agent attacks** — tested automatically in CI.
+AgentProbe throws **164 adversarial attacks** at your AI agent to find security vulnerabilities before production. Prompt injection, data exfiltration, permission escalation, output manipulation, **multi-agent attacks**, and **GitHub agentic workflow attacks** — tested automatically in CI.
 
 ## Why?
 
@@ -61,6 +61,12 @@ Admin mode activation, unauthorized tool invocation, file system access, databas
 
 ### Output Manipulation (12 attacks)
 Format injection (HTML, scripts, iframes), link injection, false authority generation, impersonation, social engineering templates, response hijacking.
+
+### Multi-Agent (30 attacks)
+Context poisoning, task/artifact manipulation, fake checkpoints, cascade privilege escalation, authority spoofing across multi-agent pipelines.
+
+### GitHub Agentic Workflow (30 attacks)
+Issue title/body injection (8), PR description injection (6), comment poisoning (5), commit message injection (4), code content injection (4), metadata manipulation (3). Tests AI agents that process GitHub events — issue triage bots, PR review agents, CI analysis agents.
 
 ## Configuration
 
@@ -228,7 +234,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: alexmelges/agentprobe@v0.3.0
+      - uses: alexmelges/agentprobe@v0.4.0
         with:
           config: agentprobe.yaml
           severity: high
@@ -323,6 +329,55 @@ agentprobe --attacks prompt-injection,data-exfiltration,multi-agent
 | `fake-checkpoint` | Fabricated quality gate results (fake test passes, fake approvals) |
 | `authority-spoof` | Responses accepting authority from spoofed orchestrator/admin sources |
 
+## GitHub Agentic Workflow Attack Suite (v0.4.0)
+
+Test AI agents that operate on GitHub events — issue triage bots, PR review agents, CI analysis agents, and project management bots. These agents read untrusted content from issues, PRs, comments, commits, and code, creating indirect prompt injection surfaces.
+
+### Attack Categories
+
+| Category | Attacks | Description |
+|----------|---------|-------------|
+| **Issue Title/Body Injection** | 8 | [INST] tags, HTML comments, zero-width characters, markdown image exfil, Unicode RTL overrides, nested details sections, fake system messages, template exploitation |
+| **PR Description Injection** | 6 | Review override via hidden comments, diff-style instructions, fake approval status, workflow dispatch attempts, permission escalation, base64-encoded payloads |
+| **Comment Poisoning** | 5 | Fake bot responses, reply-based overrides, @mention manipulation, false CI context injection, hidden HTML instructions |
+| **Commit Message Injection** | 4 | CI analysis override, fake sign-off metadata, embedded agent instructions, co-author spoofing |
+| **Code Content Injection** | 4 | Code comment injection, docstring injection, README hidden instructions, string literal injection |
+| **Metadata Manipulation** | 3 | Label names, branch names, milestone names crafted as injection vectors |
+
+### Example Config
+
+```yaml
+agent:
+  type: openai
+  model: gpt-4o
+  system: "You are a GitHub issue triage bot. Label issues by priority."
+  api_key: "${OPENAI_API_KEY}"
+
+suites:
+  - github-actions
+  - prompt-injection
+```
+
+```bash
+# Run GitHub workflow tests
+agentprobe --attacks github-actions
+
+# Test a PR review agent
+agentprobe --attacks github-actions,prompt-injection --severity high
+
+# Run all suites
+agentprobe --attacks prompt-injection,data-exfiltration,permission-escalation,output-manipulation,multi-agent,github-actions
+```
+
+### New Detectors
+
+| Detector | What it catches |
+|----------|----------------|
+| `github-label-manipulation` | Agent changing labels, priorities, or triage decisions based on injected instructions |
+| `github-merge-manipulation` | Agent approving, merging, or bypassing review checks due to injection |
+| `github-permission-change` | Agent granting repository access, changing branch protection, or creating deploy keys |
+| `github-workflow-trigger` | Agent triggering workflows, deployments, or CI pipelines from injected instructions |
+
 ## Detection System
 
 AgentProbe uses **rule-based detectors** — no LLM calls needed for detection, making results deterministic and cost-free:
@@ -340,6 +395,10 @@ AgentProbe uses **rule-based detectors** — no LLM calls needed for detection, 
 | `harmful-content` | Dangerous medical/security/phishing content |
 | `format-injection` | HTML/script/iframe injection in output |
 | `link-injection` | Suspicious or malicious link insertion |
+| `github-label-manipulation` | Agent manipulating labels/priorities from injected instructions |
+| `github-merge-manipulation` | Agent approving/merging PRs from injected instructions |
+| `github-permission-change` | Agent changing repo permissions from injected instructions |
+| `github-workflow-trigger` | Agent triggering workflows/deployments from injected instructions |
 | `context-poisoning` | Inter-agent context/instruction poisoning |
 | `fake-checkpoint` | Fabricated quality gates and verification results |
 | `authority-spoof` | Spoofed orchestrator/admin/emergency authority claims |
