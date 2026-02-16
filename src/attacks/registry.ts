@@ -5,6 +5,7 @@ import { permissionEscalationAttacks } from "./permission-escalation.js";
 import { outputManipulationAttacks } from "./output-manipulation.js";
 import { multiAgentAttacks } from "./multi-agent.js";
 import { githubActionsAttacks } from "./github-actions.js";
+import { webmcpAttacks } from "./webmcp.js";
 
 const registry: Record<SuiteName, AttackPattern[]> = {
   "prompt-injection": promptInjectionAttacks,
@@ -13,6 +14,7 @@ const registry: Record<SuiteName, AttackPattern[]> = {
   "output-manipulation": outputManipulationAttacks,
   "multi-agent": multiAgentAttacks,
   "github-actions": githubActionsAttacks,
+  webmcp: webmcpAttacks,
   jailbreak: [], // future
 };
 

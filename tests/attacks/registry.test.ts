@@ -37,6 +37,12 @@ describe("attack registry", () => {
     expect(attacks).toEqual([]);
   });
 
+  it("returns webmcp attacks", () => {
+    const attacks = getAttacks("webmcp");
+    expect(attacks.length).toBeGreaterThanOrEqual(25);
+    expect(attacks[0].suite).toBe("webmcp");
+  });
+
   it("combines all suites", () => {
     const all = getAllAttacks([
       "prompt-injection",
@@ -45,8 +51,9 @@ describe("attack registry", () => {
       "output-manipulation",
       "multi-agent",
       "github-actions",
+      "webmcp",
     ]);
-    expect(all.length).toBeGreaterThanOrEqual(150);
+    expect(all.length).toBeGreaterThanOrEqual(180);
   });
 
   it("each attack has required fields", () => {
@@ -57,6 +64,7 @@ describe("attack registry", () => {
       "output-manipulation",
       "multi-agent",
       "github-actions",
+      "webmcp",
     ]);
     for (const a of all) {
       expect(a.id).toBeTruthy();
@@ -76,6 +84,7 @@ describe("attack registry", () => {
       "output-manipulation",
       "multi-agent",
       "github-actions",
+      "webmcp",
     ]);
     const ids = all.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);

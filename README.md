@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-AgentProbe throws **164 adversarial attacks** at your AI agent to find security vulnerabilities before production. Prompt injection, data exfiltration, permission escalation, output manipulation, **multi-agent attacks**, and **GitHub agentic workflow attacks** — tested automatically in CI.
+AgentProbe throws **194 adversarial attacks** at your AI agent to find security vulnerabilities before production. Prompt injection, data exfiltration, permission escalation, output manipulation, **multi-agent attacks**, **GitHub agentic workflow attacks**, and **WebMCP browser agent attacks** — tested automatically in CI.
 
 ## Why?
 
@@ -67,6 +67,9 @@ Context poisoning, task/artifact manipulation, fake checkpoints, cascade privile
 
 ### GitHub Agentic Workflow (30 attacks)
 Issue title/body injection (8), PR description injection (6), comment poisoning (5), commit message injection (4), code content injection (4), metadata manipulation (3). Tests AI agents that process GitHub events — issue triage bots, PR review agents, CI analysis agents.
+
+### WebMCP Browser Agent (30 attacks)
+Tool response injection (6), session token exfiltration (6), capability lying (6), cross-site agent fingerprinting (4), DOM manipulation (5), tool namespace collision (3). Tests browser agents interacting with websites via the W3C WebMCP proposal (`navigator.modelContext.registerTool`).
 
 ## Configuration
 
@@ -366,7 +369,7 @@ agentprobe --attacks github-actions
 agentprobe --attacks github-actions,prompt-injection --severity high
 
 # Run all suites
-agentprobe --attacks prompt-injection,data-exfiltration,permission-escalation,output-manipulation,multi-agent,github-actions
+agentprobe --attacks prompt-injection,data-exfiltration,permission-escalation,output-manipulation,multi-agent,github-actions,webmcp
 ```
 
 ### New Detectors
@@ -377,6 +380,52 @@ agentprobe --attacks prompt-injection,data-exfiltration,permission-escalation,ou
 | `github-merge-manipulation` | Agent approving, merging, or bypassing review checks due to injection |
 | `github-permission-change` | Agent granting repository access, changing branch protection, or creating deploy keys |
 | `github-workflow-trigger` | Agent triggering workflows, deployments, or CI pipelines from injected instructions |
+
+## WebMCP Browser Agent Attack Suite (v0.6.0)
+
+Test browser agents that interact with websites exposing tools via the [W3C WebMCP proposal](https://github.com/nicholasgasior/user-interaction-safety-spec) (`navigator.modelContext.registerTool`). When agents call website-provided tools, they receive untrusted responses that create prompt injection, credential exfiltration, and DOM manipulation attack surfaces.
+
+### Attack Categories
+
+| Category | Attacks | Description |
+|----------|---------|-------------|
+| **Tool Response Injection** | 6 | Malicious tool responses containing hidden prompt injection — weather tools, search results, translation tools, error messages with embedded agent instructions |
+| **Session Token Exfiltration** | 6 | Tools attempting to extract cookies, localStorage tokens, auth headers, and session data via debug tools, analytics, feedback forms, and WebSocket connections |
+| **Capability Lying** | 6 | Tools whose schemas claim one capability but perform another — formatters that execute JS, spell checkers that exfiltrate data, calculators that inject DOM overlays |
+| **Cross-Site Agent Fingerprinting** | 4 | Websites using tool interactions to identify which agent/model is being used, mapping capabilities and refusal patterns for targeted attacks |
+| **DOM Manipulation** | 5 | Tools returning instructions to inject fake login forms, hidden iframes, keylogger scripts, payment form modifications, and content replacement |
+| **Tool Namespace Collision** | 3 | Websites registering tools that shadow browser built-ins (fetch, clipboard, localStorage) to intercept sensitive operations |
+
+### Example Config
+
+```yaml
+agent:
+  type: openai
+  model: gpt-4o
+  system: "You are a browser agent that can interact with web pages via WebMCP tools."
+  api_key: "${OPENAI_API_KEY}"
+
+suites:
+  - webmcp
+  - prompt-injection
+```
+
+```bash
+# Run WebMCP tests
+agentprobe --attacks webmcp
+
+# Combine with other suites
+agentprobe --attacks webmcp,prompt-injection,data-exfiltration --severity high
+```
+
+### New Detectors
+
+| Detector | What it catches |
+|----------|----------------|
+| `webmcp-tool-injection` | Agent relaying or following injected instructions from tool responses |
+| `webmcp-token-exfil` | Agent revealing cookies, tokens, or localStorage contents |
+| `webmcp-dom-manipulation` | Agent agreeing to modify page DOM in suspicious ways (fake forms, iframes, scripts) |
+| `webmcp-capability-confusion` | Agent calling a tool based on misleading description without verification |
 
 ## Detection System
 
@@ -402,6 +451,10 @@ AgentProbe uses **rule-based detectors** — no LLM calls needed for detection, 
 | `context-poisoning` | Inter-agent context/instruction poisoning |
 | `fake-checkpoint` | Fabricated quality gates and verification results |
 | `authority-spoof` | Spoofed orchestrator/admin/emergency authority claims |
+| `webmcp-tool-injection` | Agent relaying/following injected instructions from WebMCP tool responses |
+| `webmcp-token-exfil` | Agent revealing cookies, tokens, or localStorage to WebMCP tools |
+| `webmcp-dom-manipulation` | Agent modifying page DOM via suspicious WebMCP tool instructions |
+| `webmcp-capability-confusion` | Agent trusting misleading tool descriptions without verification |
 
 ## Severity Levels
 

@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import { resolve } from "node:path";
-import { writeFileSync, existsSync } from "node:fs";
+import { writeFileSync, existsSync, statSync } from "node:fs";
 import { loadConfig } from "./config.js";
 import { createAdapter } from "./adapters/index.js";
 import { DemoAdapter } from "./adapters/demo.js";
@@ -10,6 +10,7 @@ import { runProbe } from "./runner.js";
 import { report, type OutputFormat } from "./reporter.js";
 import { getAllAttacks } from "./attacks/registry.js";
 import type { SuiteName } from "./attacks/types.js";
+import { auditSkill, formatSkillReport, type SkillReportFormat } from "./skill-audit/index.js";
 
 const STARTER_CONFIG = `# AgentProbe configuration
 # Docs: https://github.com/alexmelges/agentprobe
@@ -41,7 +42,7 @@ const program = new Command();
 program
   .name("agentprobe")
   .description("Adversarial security testing for AI agents")
-  .version("0.3.0");
+  .version("0.5.0");
 
 // Main scan command (default)
 program
@@ -178,5 +179,47 @@ async function runDemo(options: { format?: string; severity?: string; verbose?: 
   console.log("This was a demo against a mock vulnerable agent.");
   console.log("To test YOUR agent: agentprobe init && agentprobe");
 }
+
+// Audit-skill command
+program
+  .command("audit-skill <path>")
+  .description("Static security analysis of an AI agent skill/plugin directory")
+  .option(
+    "-s, --severity <level>",
+    "minimum severity to report: low, medium, high, critical",
+    "low"
+  )
+  .option(
+    "-f, --format <format>",
+    "output format: text, json, sarif, markdown",
+    "text"
+  )
+  .action((skillPath, options) => {
+    const resolved = resolve(skillPath);
+
+    try {
+      const stat = statSync(resolved);
+      if (!stat.isDirectory()) {
+        console.error(`Error: ${resolved} is not a directory`);
+        process.exit(1);
+      }
+    } catch {
+      console.error(`Error: ${resolved} does not exist`);
+      process.exit(1);
+    }
+
+    const result = auditSkill(resolved, {
+      severityFilter: options.severity,
+    });
+
+    const output = formatSkillReport(result, options.format as SkillReportFormat);
+    console.log(output);
+
+    // Exit 1 if any critical or high findings
+    const hasCriticalOrHigh = result.findings.some(
+      (f) => f.severity === "critical" || f.severity === "high"
+    );
+    process.exit(hasCriticalOrHigh ? 1 : 0);
+  });
 
 program.parse();
